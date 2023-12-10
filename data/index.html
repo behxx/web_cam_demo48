@@ -59,50 +59,47 @@
   <a href="#" id="btn" ONCLICK='button()'> </a>
   <div class="create-alarm">
         <section class="toggle-section">
-                <form>
-                    <input
-                    type="number"
-                    name="hour"
-                    id="hour"
-                    min="0"
-                    max="12"
-                    placeholder="H"
-                    class="alarm-inputs"
-                    required
-                    />
-                    <input
-                    type="number"
-                    name="min"
-                    min="0"
-                    max="60"
-                    placeholder="M"
-                    class="alarm-inputs"
-                    required
-                    />
-                    <input
-                    type="number"
-                    name="sec"
-                    min="0"
-                    max="60"
-                    placeholder="S"
-                    class="alarm-inputs"
-                    required
-                    />
-                    <select name="zone" class="alarm-inputs" required>
-                    <option value="" selected disabled>AM/PM</option>
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                    </select>
-                    <button>Set schedule</button>
-                </form>
+          <form>
+            <input
+            type="number"
+            name="h"
+            id="h"
+            min="0"
+            max="24"
+            placeholder="H"
+            class="alarm-inputs"
+            required
+            />
+            <input
+            type="number"
+            name="m"
+            id="m"
+            min="0"
+            max="60"
+            placeholder="M"
+            class="alarm-inputs"
+            required
+            />
+            <input
+            type="number"
+            name="s"
+            id="s"
+            min="0"
+            max="60"
+            placeholder="S"
+            class="alarm-inputs"
+            required
+            />
+            <input type="submit" name="" id="" value="Submit">
+            <button>Set schedule</button>
+          </form>
         </section>
     </label>
 </div>
 <!-----------------------------JavaScript--------------------------->
 </body>
 <script>
-   InitWebSocket()
-   function InitWebSocket()
+  function InitWebSocket()
    {
      websock = new WebSocket('ws://'+window.location.hostname+':82/'); 
      websock.onmessage = function(evt)
@@ -121,6 +118,8 @@
         }
      }
    }
+   InitWebSocket()
+
    //-------------------------------------------------------------
    function button()
    {
@@ -176,11 +175,6 @@
             seconds = seconds < 10 ? seconds = "0" + seconds : seconds;
 
             var t_str = hours + ":" + minutes + ":" +  seconds +" ";
-            if(hours > 11){
-                t_str += "PM";
-            } else {
-                t_str += "AM";
-            }
             document.getElementById('time_span').innerHTML = t_str;
             }
 
