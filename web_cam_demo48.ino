@@ -6,7 +6,7 @@
 #include "camera_pins.h"
 //#include "functions.h"
 
-// variable definations
+// variable definations8
 const char* ssid = "MI 6";
 const char* password = "beh01234";
 
@@ -26,6 +26,8 @@ String JSONtxt;
 void configCamera();
 void liveCam(uint8_t num);
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
+void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t welength);
+
 void http_resp();
 void sendHtmlFile(WiFiClient client, const char* filename);
 
@@ -71,6 +73,7 @@ void setup() {
 
 void loop() {
   http_resp();
+  
   webSocket.loop();
   if(connected == true){
     liveCam(cam_num);
@@ -157,10 +160,10 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     Serial.println(val);
     Serial.println(" ");
 
-    if(var == "LEDonoff")
+    if (var == "LEDonoff")
     {
       LEDonoff = false;
-      if(val == "ON") LEDonoff = true;
+      if (val == "ON") LEDonoff = true;
     }
   }
 }
@@ -186,7 +189,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
     }
 }
 
-//html functions, sending html page from SPIFFS
 void http_resp(){
   WiFiClient client = server.available();
   if (client.connected() && client.available()) {                   

@@ -6,9 +6,34 @@
   <title>My PetFeeder UI</title>
   <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 </head>
-<!-------------------------------C S S------------------------------>
+<!------------------------------ C S S ----------------------------->
 <style>
-   #btn {
+/* Element selector */
+body {
+    width: 50%;
+    height: auto;
+    margin: auto;
+    background-color: #1b1b32;
+    color: #f5f6f7;
+    font-family: Tahoma;
+    font-size: 16px;
+    padding: 50px;
+}
+
+fieldset {
+    background-color: #3b3b4f;
+}
+
+/* ID sellector */
+#live {
+    display: block;
+    margin: auto;
+    width: 30%;
+    border: 1px solid white;
+    padding: 10px;
+}
+
+#btn {
     display: inline-block;
     text-decoration: none;
     background: #8CD460;
@@ -26,80 +51,103 @@
     border: solid 2px rgba(255,255,255, 0.47);
     transition: 0.5s;
     margin: 30px;
-  }
-  
-  body {
-    text-align:center; font-family:"Calibri"; background-color:rgba(0, 3, 8, 0.26)
-  }
+}
 
-  h1   {
-    color: rgba(0, 0, 255, 0.87); font-size: 50px;
-  } 
-  #live {
-    display: block;
-  }
+#title {
+    text-align: center;
+}
+/* Class selector */
+.wrapper-class label {
+    display: inline;
+    margin-left: 5px;
+    text-align: left;
+}
 
-  .center {
-  margin: auto;
-  width: 30%;
-  border: 3px solid green;
-  padding: 10px;
-  }
+.wrapper-class input[type="radio"] {
+    width: 10px;
+    display: inline;
+}
 
+.time h2{
+    display: inline;
+}
+
+.video {
+  margin-top: 10px;
+}
 </style>
 <!------------------------------H T M L----------------------------->
 <body>
-  <h1>Capstone project<br>Smart Automatic Pet Feeding System</h1>
-  <div class="time">
-  <h2 id="time_span"></h2>
-  </div>
-
-  <img src="" alt="video stream" id="live" class="center">
-
-  <a href="#" id="btn" ONCLICK='button()'> </a>
-  <div class="create-alarm">
-        <section class="toggle-section">
-          <form>
-            <input
-            type="number"
-            name="h"
-            id="h"
-            min="0"
-            max="24"
-            placeholder="H"
-            class="alarm-inputs"
-            required
-            />
-            <input
-            type="number"
-            name="m"
-            id="m"
-            min="0"
-            max="60"
-            placeholder="M"
-            class="alarm-inputs"
-            required
-            />
-            <input
-            type="number"
-            name="s"
-            id="s"
-            min="0"
-            max="60"
-            placeholder="S"
-            class="alarm-inputs"
-            required
-            />
-            <input type="submit" name="" id="" value="Submit">
-            <button>Set schedule</button>
-          </form>
-        </section>
-    </label>
-</div>
-<!-----------------------------JavaScript--------------------------->
+  <h1 id="title">Capstone project<br>Smart Automatic Pet Feeding System</h1>
+  <fieldset>
+    <div class="time">
+      <h2>Current Time:</h2>
+      <h2 id="time_span"></h2>
+    </div>
+    <div class="video">
+      <img src="" alt="video stream" id="live" class="centre">
+    </div>
+    
+    <a href="#" id="btn" ONCLICK='button()'> </a>
+    
+    <div class="setPortion">
+      <h2><label for="turns">Set Portion</label></h2>
+      <div class="wrapper-class">
+        <input type="radio" id="oneTurn" name="turns" value="1" checked>
+        <label for="One">One Turn</label>
+      </div>
+      <div class="wrapper-class">
+        <input type="radio" id="twoTurn" name="turns" value="2">
+        <label for="Two">Two Turns</label>
+      </div>
+      <div class="wrapper-class">
+        <input type="radio" id="threeTurn" name="turns" value="3">
+        <label for="Three">Three Turns</label>
+      </div>
+    </div>
+  
+    <div class="create-alarm">
+          <section class="toggle-section">
+            <form>
+              <input
+              type="number"
+              name="h"
+              id="h"
+              min="0"
+              max="24"
+              placeholder="H"
+              class="alarm-inputs"
+              required
+              />
+              <input
+              type="number"
+              name="m"
+              id="m"
+              min="0"
+              max="60"
+              placeholder="M"
+              class="alarm-inputs"
+              required
+              />
+              <input
+              type="number"
+              name="s"
+              id="s"
+              min="0"
+              max="60"
+              placeholder="S"
+              class="alarm-inputs"
+              required
+              />
+              <button>Set schedule</button>
+            </form>
+          </section>
+      </label>
+    </div>
+  </fieldset>
 </body>
 <script>
-  function InitWebSocket()
+    function InitWebSocket()
    {
      websock = new WebSocket('ws://'+window.location.hostname+':82/'); 
      websock.onmessage = function(evt)
@@ -129,6 +177,20 @@
         btn = 'LEDonoff=OFF';
       }
       websock.send(btn);
+   }
+
+   function setTurns()
+   {
+    const rbs = document.querySelectorAll('input[name="turns"]');
+    var turns;
+    for (const rb of rbs) {
+      if (rb.checked) {
+        turns = rb.value;
+        document.getElementById("turnSet").innerHTML = rb.value;
+        break;
+      }
+    }
+    websock.send(turns);
    }
 
   jQuery(function($){
