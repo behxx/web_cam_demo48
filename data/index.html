@@ -33,7 +33,7 @@ fieldset {
     padding: 10px;
 }
 
-#btn {
+#btn, #IR {
     display: inline-block;
     text-decoration: none;
     background: #8CD460;
@@ -56,6 +56,18 @@ fieldset {
 #title {
     text-align: center;
 }
+
+#dynRectangle1
+    {
+        width:0px;
+        height:12px;
+        top: 9px;
+        background-color: rgba(255, 0, 0, 0.863);
+        z-index: -1;
+        margin-top: 1px;
+        border: 3px solid black;
+    }
+
 /* Class selector */
 .wrapper-class label {
     display: inline;
@@ -75,6 +87,11 @@ fieldset {
 .video {
   margin-top: 10px;
 }
+.Distance {
+  margin: 20px;
+  display: inline-block;
+}
+
 </style>
 <!------------------------------H T M L----------------------------->
 <body>
@@ -89,6 +106,17 @@ fieldset {
     </div>
     
     <a href="#" id="btn" ONCLICK='button()'> </a>
+    <a href="#" id="IR" > </a>
+
+    <div class="Distance">
+      <h2>Distance:</h2>
+      <span  style="color:rgb(216, 3, 3)" id="distValue">0</span> cm <br>
+      <h3>
+        0 cm &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 200 cm
+        <div id="dynRectangle1"></div><br>
+      </h3>
+    </div>
     
     <div class="setPortion">
       <h2><label for="turns">Set Portion</label></h2>
@@ -163,6 +191,22 @@ fieldset {
         {
           document.getElementById('btn').style.background='#111111';
           document.getElementById('btn').style["boxShadow"] = "0px 0px 0px 8px #111111";
+        }
+
+        document.getElementById('distValue').innerHTML = JSONobj.DIST;
+        var temp = parseInt(JSONobj.DIST);
+        document.getElementById("dynRectangle1").style.width = temp+"px";
+
+        document.getElementById('IR').innerHTML = JSONobj.IRonoff;
+        if(JSONobj.IRonoff == 'ON')
+        {
+          document.getElementById('IR').style.background='#FF0000';
+          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #FF0000";
+        }
+        else
+        {
+          document.getElementById('IR').style.background='#111111';
+          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #111111";
         }
      }
    }

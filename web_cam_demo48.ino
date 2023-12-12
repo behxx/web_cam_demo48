@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WebSocketsServer.h>
 #include "SPIFFS.h"
+#include <HCSR04.h>
 
 #include "camera_pins.h"
 //#include "functions.h"
@@ -16,10 +17,13 @@ WebSocketsServer webSocketFunction = WebSocketsServer(82);
 WiFiServer server(80);
 
 #define LED 33
+#define IR 14
+HCSR04 hc(15, 13); //initialisation class HCSR04 (trig pin , echo pin)
 
 uint8_t cam_num;
 bool connected = false;
-boolean LEDonoff=false; 
+bool LEDonoff = false;
+bool IRonoff = false; 
 String JSONtxt;
 
 // function declarations
@@ -36,6 +40,7 @@ void setup() {
   
   //setup pinMODE
   pinMode(LED, OUTPUT);
+  pinMode(IR, INPUT);
 
   // check SPIFFS mount
   if(!SPIFFS.begin(true)){
@@ -80,14 +85,21 @@ void loop() {
   }
   webSocketFunction.loop();
   if(connected == true){
-    if(LEDonoff == false) 
-    digitalWrite(LED, HIGH);
+    if(LEDonoff == false) digitalWrite(LED, HIGH);
     else digitalWrite(LED, LOW);
+
+    if(digitalRead(IR) == HIGH) IRonoff = true;
+    else IRonoff = false;
   //-----------------------------------------------
     String LEDstatus = "OFF";
+    String USONIC_ValString = String(hc.dist());
+    String IRstatus = "OFF";
     if(LEDonoff == true) LEDstatus = "ON";
+    if(IRonoff == true) IRstatus = "ON";
     
-    JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\"}";
+    JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\",";
+    JSONtxt += "\"IRonoff\":\""+IRstatus+"\",";
+    JSONtxt += "\"DIST\":\""+USONIC_ValString+"\"}";
     webSocketFunction.broadcastTXT(JSONtxt);
   }
 }
