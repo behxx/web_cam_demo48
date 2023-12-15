@@ -121,57 +121,48 @@ fieldset {
     <div class="setPortion">
       <h2><label for="turns">Set Portion</label></h2>
       <div class="wrapper-class">
-        <input type="radio" id="oneTurn" name="turns" value="1" checked>
-        <label for="One">One Turn</label>
+        <input type="radio" id="oneTurn" name="turns" value="one" checked>
+        <label for="oneTurn">One Turn</label>
       </div>
       <div class="wrapper-class">
-        <input type="radio" id="twoTurn" name="turns" value="2">
-        <label for="Two">Two Turns</label>
+        <input type="radio" id="twoTurn" name="turns" value="two">
+        <label for="twoTurn">Two Turns</label>
       </div>
       <div class="wrapper-class">
-        <input type="radio" id="threeTurn" name="turns" value="3">
-        <label for="Three">Three Turns</label>
+        <input type="radio" id="threeTurn" name="turns" value="three">
+        <label for="threeTurn">Three Turns</label>
       </div>
+      <button ONCLICK='setTurns()'>Set Portion</button>
     </div>
   
+    <div id="resultSetTurn"></div>
+
     <div class="create-alarm">
-          <section class="toggle-section">
-            <form>
-              <input
-              type="number"
-              name="h"
-              id="h"
-              min="0"
-              max="24"
-              placeholder="H"
-              class="alarm-inputs"
-              required
-              />
-              <input
-              type="number"
-              name="m"
-              id="m"
-              min="0"
-              max="60"
-              placeholder="M"
-              class="alarm-inputs"
-              required
-              />
-              <input
-              type="number"
-              name="s"
-              id="s"
-              min="0"
-              max="60"
-              placeholder="S"
-              class="alarm-inputs"
-              required
-              />
-              <button>Set schedule</button>
-            </form>
-          </section>
-      </label>
+      <input
+      type="number"
+      name="h"
+      id="h"
+      min="0"
+      max="23"
+      placeholder="H"
+      class="alarm-inputs"
+      value="7"
+      required
+      />
+      <input
+      type="number"
+      name="m"
+      id="m"
+      min="0"
+      max="59"
+      placeholder="M"
+      class="alarm-inputs"
+      value="30"
+      required
+      />
+      <button ONCLICK="setSchedule()" class="">Set schedule</button>
     </div>
+
   </fieldset>
 </body>
 <script>
@@ -208,6 +199,8 @@ fieldset {
           document.getElementById('IR').style.background='#111111';
           document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #111111";
         }
+
+        document.getElementById('time_span').innerHTML = JSONobj.myTIME;
      }
    }
    InitWebSocket()
@@ -225,15 +218,15 @@ fieldset {
 
    function setTurns()
    {
-    const rbs = document.querySelectorAll('input[name="turns"]');
-    var turns;
-    for (const rb of rbs) {
-      if (rb.checked) {
-        turns = rb.value;
-        document.getElementById("turnSet").innerHTML = rb.value;
+    var rbs = document.getElementsByName('turns');
+    for (i = 0; i < rbs.length; i++) {
+      if (rbs[i].checked) {
+        val = rbs[i].value;
+        document.getElementById('resultSetTurn').innerHTML = val+" turns";
         break;
       }
     }
+    turns = 'turns='+val;
     websock.send(turns);
    }
 
@@ -270,20 +263,34 @@ fieldset {
       }
   })
 
-  function updateTime(){
-            var currentTime = new Date()
-            var hours = currentTime.getHours()
-            var minutes = currentTime.getMinutes()
-            var seconds = currentTime.getSeconds()
-            
-            hours = hours < 10 ? hours = "0" + hours : hours;
-            minutes = minutes < 10 ? minutes = "0" + minutes : minutes;
-            seconds = seconds < 10 ? seconds = "0" + seconds : seconds;
+  function setSchedule()
+  { 
+    let text = "Are you sure?";
+    if (confirm(text) == true) {
+      var hours = document.getElementById("h").value;
+      var mins = document.getElementById("m").value;
+      var schedule = 'schedule='+hours+':'+mins;
+      websock.send(schedule);
+    } else {
+      alert("Schedule not set!\nReseting to default.");
+    }
+    document.getElementById("h").value = 7;
+    document.getElementById("m").value = 30;
+  }
 
-            var t_str = hours + ":" + minutes + ":" +  seconds +" ";
-            document.getElementById('time_span').innerHTML = t_str;
-            }
+  // function updateTime()
+  // {
+  //   var currentTime = new Date()
+  //   var hours = currentTime.getHours()
+  //   var minutes = currentTime.getMinutes()
+    
+  //   hours = hours < 10 ? hours = "0" + hours : hours;
+  //   minutes = minutes < 10 ? minutes = "0" + minutes : minutes;
 
-  setInterval(updateTime, 1000);
+  //   var t_str = hours + ":" + minutes ;
+  //   document.getElementById('time_span').innerHTML = t_str;
+  // }
+
+  // setInterval(updateTime, 1000);
 </script>
 </html>

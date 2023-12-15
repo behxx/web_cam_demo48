@@ -3,13 +3,17 @@
 #include <WebSocketsServer.h>
 #include "SPIFFS.h"
 #include <HCSR04.h>
+#include "time.h"
 
 #include "camera_pins.h"
-//#include "functions.h"
 
-// variable definations8
+// variable definations
 const char* ssid = "MI 6";
 const char* password = "beh01234";
+
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 8*60*60;
+const int   daylightOffset_sec = 0;
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 WebSocketsServer webSocketFunction = WebSocketsServer(82);
@@ -31,6 +35,7 @@ void configCamera();
 void liveCam(uint8_t num);
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t welength);
+String myLocalTime();
 
 void http_resp();
 void sendHtmlFile(WiFiClient client, const char* filename);
@@ -74,6 +79,7 @@ void setup() {
   Serial.println("Websocket function started");
   
   configCamera();
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
 
 void loop() {
@@ -84,22 +90,31 @@ void loop() {
     liveCam(cam_num);
   }
   webSocketFunction.loop();
-  if(connected == true){
-    if(LEDonoff == false) digitalWrite(LED, HIGH);
-    else digitalWrite(LED, LOW);
+    if(connected == true){
+      if(LEDonoff == false) digitalWrite(LED, HIGH);
+      else digitalWrite(LED, LOW);
+    
+      if(digitalRead(IR) == HIGH) IRonoff = true;
+      else IRonoff = false;
 
-    if(digitalRead(IR) == HIGH) IRonoff = true;
-    else IRonoff = false;
+      
+
+    
   //-----------------------------------------------
     String LEDstatus = "OFF";
     String USONIC_ValString = String(hc.dist());
     String IRstatus = "OFF";
+
+    String myCurrentTime = myLocalTime();
+    
     if(LEDonoff == true) LEDstatus = "ON";
     if(IRonoff == true) IRstatus = "ON";
     
     JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\",";
     JSONtxt += "\"IRonoff\":\""+IRstatus+"\",";
+    JSONtxt += "\"myTIME\":\""+myCurrentTime+"\",";
     JSONtxt += "\"DIST\":\""+USONIC_ValString+"\"}";
+    
     webSocketFunction.broadcastTXT(JSONtxt);
   }
 }
@@ -161,6 +176,8 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
   Serial.print("payloadString= ");
   Serial.println(payloadString);
 
+  
+  
   if(type == WStype_TEXT) //receive text from client
   {
     byte separator=payloadString.indexOf('=');
@@ -172,10 +189,22 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     Serial.println(val);
     Serial.println(" ");
 
+    
     if (var == "LEDonoff")
     {
       LEDonoff = false;
       if (val == "ON") LEDonoff = true;
+    }
+
+    if (var == "schedule")
+    {
+      byte timeSeperator = payloadString.indexOf(':'); 
+      String h_val = payloadString.substring(separator+1, timeSeperator);
+      String m_val = payloadString.substring(timeSeperator+1);
+      Serial.print("h_val= ");
+      Serial.println(h_val);
+      Serial.print("m_val= ");
+      Serial.println(m_val);
     }
   }
 }
@@ -233,3 +262,29 @@ void sendHtmlFile(WiFiClient client, const char* filename) {
     Serial.println("Error opening HTML file");
   }
 }
+
+String myLocalTime(){
+  struct tm timeinfo;
+  String myErrorMsg = "Error obtaining time!";
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return myErrorMsg;
+  }
+
+  String myTime;
+  
+  char timeHour[3];
+  strftime(timeHour,3, "%H", &timeinfo);
+  char timeMinute[3];
+  strftime(timeMinute,3, "%M", &timeinfo);
+  char timeSecond[3];
+  strftime(timeSecond,3, "%S", &timeinfo);
+  
+  myTime += timeHour;
+  myTime += ':';
+  myTime += timeMinute;
+  myTime += ':';
+  myTime += timeSecond;
+  
+  return myTime;
+  }
