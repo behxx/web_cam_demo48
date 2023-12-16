@@ -36,6 +36,8 @@ void liveCam(uint8_t num);
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t welength);
 String myLocalTime();
+void saveSchedule(int h_val, int m_val);
+String readSchedule();
 
 void http_resp();
 void sendHtmlFile(WiFiClient client, const char* filename);
@@ -96,11 +98,8 @@ void loop() {
     
       if(digitalRead(IR) == HIGH) IRonoff = true;
       else IRonoff = false;
-
-      
-
-    
   //-----------------------------------------------
+    String myReadSchedule = readSchedule();
     String LEDstatus = "OFF";
     String USONIC_ValString = String(hc.dist());
     String IRstatus = "OFF";
@@ -113,6 +112,7 @@ void loop() {
     JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\",";
     JSONtxt += "\"IRonoff\":\""+IRstatus+"\",";
     JSONtxt += "\"myTIME\":\""+myCurrentTime+"\",";
+    JSONtxt += "\"mySCH\":\""+myReadSchedule+"\",";
     JSONtxt += "\"DIST\":\""+USONIC_ValString+"\"}";
     
     webSocketFunction.broadcastTXT(JSONtxt);
@@ -199,12 +199,18 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     if (var == "schedule")
     {
       byte timeSeperator = payloadString.indexOf(':'); 
-      String h_val = payloadString.substring(separator+1, timeSeperator);
-      String m_val = payloadString.substring(timeSeperator+1);
+      String h_str = payloadString.substring(separator+1, timeSeperator);
+      String m_str = payloadString.substring(timeSeperator+1);
+      
+      int h_val = h_str.toInt();
       Serial.print("h_val= ");
       Serial.println(h_val);
+      
+      int m_val = m_str.toInt();
       Serial.print("m_val= ");
       Serial.println(m_val);
+      
+      saveSchedule(h_val, m_val);
     }
   }
 }
@@ -288,3 +294,70 @@ String myLocalTime(){
   
   return myTime;
   }
+
+void saveSchedule(int h_val, int m_val) {
+     if (!(SPIFFS.exists("/schedule.txt"))){
+          File fileToWrite = SPIFFS.open("/schedule.txt", FILE_WRITE);
+          if(!fileToWrite){
+            Serial.println("There was an error opening the file for writing");
+            return;
+          }
+          if(fileToWrite){
+              fileToWrite.println(h_val);
+              fileToWrite.println(m_val);
+            Serial.println("File was written");;
+          } else {
+            Serial.println("File write failed");
+          }
+          fileToWrite.close();
+        }else {
+          File fileToAppend = SPIFFS.open("/schedule.txt", FILE_APPEND);
+          if(!fileToAppend){
+            Serial.println("There was an error opening the file for appending");
+            return;
+          }
+          if(fileToAppend){
+              fileToAppend.println(h_val);
+              fileToAppend.println(m_val);
+              Serial.println("File content was appended");
+          } else {
+              Serial.println("File append failed");
+          }
+          fileToAppend.close();
+     }
+
+     File fileToRead = SPIFFS.open("/schedule.txt");
+     if(!fileToRead){
+        Serial.println("Failed to open file for reading");
+        return;
+      }
+     Serial.println("File Content:");
+     while(fileToRead.available()){
+        Serial.write(fileToRead.read());
+      }
+}
+
+//next step: read normally as in example into array.
+String readSchedule(){
+  String error = "Read sch fail!";
+  if (!(SPIFFS.exists("/schedule.txt")))
+  {
+    Serial.println("file not saved yet");
+    return error;
+  } 
+  else 
+  {
+    File fileToRead = SPIFFS.open("/schedule.txt");
+    if(!fileToRead)
+    {
+      Serial.println("Failed to open file for reading");
+      return error;
+    }
+    while(fileToRead.available())
+    {
+      //read here
+      resultReadSchedule = fileToRead.read();
+    }
+  }
+  return resultReadSchedule;
+}

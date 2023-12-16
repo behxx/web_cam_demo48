@@ -146,7 +146,6 @@ fieldset {
       max="23"
       placeholder="H"
       class="alarm-inputs"
-      value="7"
       required
       />
       <input
@@ -157,12 +156,12 @@ fieldset {
       max="59"
       placeholder="M"
       class="alarm-inputs"
-      value="30"
       required
       />
       <button ONCLICK="setSchedule()" class="">Set schedule</button>
     </div>
 
+    <div id="resultSchedule"></div>
   </fieldset>
 </body>
 <script>
@@ -201,6 +200,7 @@ fieldset {
         }
 
         document.getElementById('time_span').innerHTML = JSONobj.myTIME;
+        document.getElementById('resultSchedule').innerHTML = JSONobj.mySCH;
      }
    }
    InitWebSocket()
@@ -268,14 +268,19 @@ fieldset {
     let text = "Are you sure?";
     if (confirm(text) == true) {
       var hours = document.getElementById("h").value;
-      var mins = document.getElementById("m").value;
-      var schedule = 'schedule='+hours+':'+mins;
+      var minutes = document.getElementById("m").value;
+
+      hours = hours < 10 ? hours = "0" + hours : hours;
+      minutes = minutes < 10 ? minutes = "0" + minutes : minutes;
+
+      var schedule = 'schedule='+hours+':'+minutes;
       websock.send(schedule);
+      // document.getElementById('resultSchedule').innerHTML = "Schedule set to "+hours+":"+mins;
     } else {
       alert("Schedule not set!\nReseting to default.");
     }
-    document.getElementById("h").value = 7;
-    document.getElementById("m").value = 30;
+    document.getElementById("h").value = 'H';
+    document.getElementById("m").value = 'M';
   }
 
   // function updateTime()
@@ -284,8 +289,8 @@ fieldset {
   //   var hours = currentTime.getHours()
   //   var minutes = currentTime.getMinutes()
     
-  //   hours = hours < 10 ? hours = "0" + hours : hours;
-  //   minutes = minutes < 10 ? minutes = "0" + minutes : minutes;
+    // hours = hours < 10 ? hours = "0" + hours : hours;
+    // minutes = minutes < 10 ? minutes = "0" + minutes : minutes;
 
   //   var t_str = hours + ":" + minutes ;
   //   document.getElementById('time_span').innerHTML = t_str;
