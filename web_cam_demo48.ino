@@ -28,7 +28,15 @@ uint8_t cam_num;
 bool connected = false;
 bool LEDonoff = false;
 bool IRonoff = false; 
+bool myCheck = false;
+bool dispenseRequest = false;
+bool limitSchedule = false;
 String JSONtxt;
+
+char timeHour[3], timeMinute[3], timeSecond[3];
+String h_one, m_one,
+       h_time, m_time;
+
 
 // function declarations
 void configCamera();
@@ -37,7 +45,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t welength);
 String myLocalTime();
 void saveSchedule(int h_val, int m_val);
-String readSchedule();
+//String readSchedule();
+void dltSchedule();
+bool checkSchedule();
 
 void http_resp();
 void sendHtmlFile(WiFiClient client, const char* filename);
@@ -99,20 +109,30 @@ void loop() {
       if(digitalRead(IR) == HIGH) IRonoff = true;
       else IRonoff = false;
   //-----------------------------------------------
-    String myReadSchedule = readSchedule();
     String LEDstatus = "OFF";
     String USONIC_ValString = String(hc.dist());
     String IRstatus = "OFF";
+    String limitStatus = "OFF";
 
     String myCurrentTime = myLocalTime();
+    myCheck = checkSchedule();
+
+    if(myCheck == true) 
+    {
+      dispenseRequest = true;
+      //dispense function here, rmb set flag to false after fin.
+      Serial.println("Alarm triggered!");
+    }
     
     if(LEDonoff == true) LEDstatus = "ON";
     if(IRonoff == true) IRstatus = "ON";
+    if(limitSchedule == true) limitStatus = "ON";
     
     JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\",";
     JSONtxt += "\"IRonoff\":\""+IRstatus+"\",";
     JSONtxt += "\"myTIME\":\""+myCurrentTime+"\",";
-    JSONtxt += "\"mySCH\":\""+myReadSchedule+"\",";
+//    JSONtxt += "\"dispenseStatus\":\""+dispenseRequest+"\",";
+    JSONtxt += "\"limitSch\":\""+limitStatus+"\",";
     JSONtxt += "\"DIST\":\""+USONIC_ValString+"\"}";
     
     webSocketFunction.broadcastTXT(JSONtxt);
@@ -212,6 +232,12 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
       
       saveSchedule(h_val, m_val);
     }
+
+    if (var == "del_sch")
+    {
+      //call dlt fn.  
+      dltSchedule();
+    }
   }
 }
 
@@ -278,13 +304,13 @@ String myLocalTime(){
   }
 
   String myTime;
-  
-  char timeHour[3];
+
   strftime(timeHour,3, "%H", &timeinfo);
-  char timeMinute[3];
   strftime(timeMinute,3, "%M", &timeinfo);
-  char timeSecond[3];
   strftime(timeSecond,3, "%S", &timeinfo);
+
+  h_time = String(timeHour);
+  m_time = String(timeMinute);
   
   myTime += timeHour;
   myTime += ':';
@@ -296,21 +322,22 @@ String myLocalTime(){
   }
 
 void saveSchedule(int h_val, int m_val) {
-     if (!(SPIFFS.exists("/schedule.txt"))){
-          File fileToWrite = SPIFFS.open("/schedule.txt", FILE_WRITE);
-          if(!fileToWrite){
-            Serial.println("There was an error opening the file for writing");
-            return;
-          }
-          if(fileToWrite){
-              fileToWrite.println(h_val);
-              fileToWrite.println(m_val);
-            Serial.println("File was written");;
-          } else {
-            Serial.println("File write failed");
-          }
-          fileToWrite.close();
+      if (!(SPIFFS.exists("/schedule.txt"))){
+        File fileToWrite = SPIFFS.open("/schedule.txt", FILE_WRITE);
+        if(!fileToWrite){
+          Serial.println("There was an error opening the file for writing");
+          return;
+        }
+        if(fileToWrite){
+          fileToWrite.println(h_val);
+          fileToWrite.println(m_val);
+          limitSchedule = true;
+          Serial.println("File was written");;
         }else {
+          Serial.println("File write failed");
+        }
+        fileToWrite.close();
+      }else {
           File fileToAppend = SPIFFS.open("/schedule.txt", FILE_APPEND);
           if(!fileToAppend){
             Serial.println("There was an error opening the file for appending");
@@ -319,6 +346,7 @@ void saveSchedule(int h_val, int m_val) {
           if(fileToAppend){
               fileToAppend.println(h_val);
               fileToAppend.println(m_val);
+              limitSchedule = true;
               Serial.println("File content was appended");
           } else {
               Serial.println("File append failed");
@@ -335,29 +363,47 @@ void saveSchedule(int h_val, int m_val) {
      while(fileToRead.available()){
         Serial.write(fileToRead.read());
       }
+      int i = 0;
+      char buffer[64];
+      
+      while (fileToRead.available()){
+        int l = fileToRead.readBytesUntil('\n', buffer, sizeof(buffer));
+        buffer[l] = 0;
+    
+        if      (i == 0) h_one = buffer;
+        else if (i == 1) m_one = buffer;
+        i++;
+      }
+}
+void dltSchedule()
+{
+  if (SPIFFS.remove("/schedule.txt"))
+  {
+    limitSchedule = false;
+    Serial.println("File deleted");
+    return;
+  }else {
+    Serial.println("Delete failed");
+  }
+
+ File fileToRead = SPIFFS.open("/schedule.txt");
+  if(!fileToRead){
+    Serial.println("Failed to open file for reading");
+    return;
+  }
 }
 
-//next step: read normally as in example into array.
-String readSchedule(){
-  String error = "Read sch fail!";
-  if (!(SPIFFS.exists("/schedule.txt")))
+//compare int not string
+bool checkSchedule()
+{   
+  int check_m, check_h;
+  
+  check_m = strcmp(m_time, m_one);
+  if (check_m == 0)
   {
-    Serial.println("file not saved yet");
-    return error;
-  } 
-  else 
-  {
-    File fileToRead = SPIFFS.open("/schedule.txt");
-    if(!fileToRead)
-    {
-      Serial.println("Failed to open file for reading");
-      return error;
-    }
-    while(fileToRead.available())
-    {
-      //read here
-      resultReadSchedule = fileToRead.read();
-    }
+    check_h = strcmp(h_time,h_one);
+    if (check_h == 0) return true;
+    else return false;
   }
-  return resultReadSchedule;
+  return false;
 }
