@@ -4,6 +4,8 @@
 #include "SPIFFS.h"
 #include <HCSR04.h>
 #include "time.h"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #include "camera_pins.h"
 
@@ -11,14 +13,12 @@
 const char* ssid = "MI 6";
 const char* password = "beh01234";
 
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 8*60*60;
-const int   daylightOffset_sec = 0;
-
 WebSocketsServer webSocket = WebSocketsServer(81);
 WebSocketsServer webSocketFunction = WebSocketsServer(82);
 
 WiFiServer server(80);
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
 
 #define LED 33
 #define IR 14
@@ -30,27 +30,25 @@ bool LEDonoff = false;
 bool IRonoff = false; 
 bool myCheck = false;
 bool dispenseRequest = false;
-bool limitSchedule = false;
-String JSONtxt;
+//bool limitSchedule = false;
+String JSONtxt, myCurrentTime, mySavedSchedule;
 
-char timeHour[3], timeMinute[3], timeSecond[3];
-String h_one, m_one,
-       h_time, m_time;
-
+int currentHour, currentMin, currentSec;
+String h_one, m_one;
+int arraySch[10];
 
 // function declarations
 void configCamera();
 void liveCam(uint8_t num);
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t welength);
-String myLocalTime();
 void saveSchedule(int h_val, int m_val);
 //String readSchedule();
 void dltSchedule();
-bool checkSchedule();
 
 void http_resp();
 void sendHtmlFile(WiFiClient client, const char* filename);
+String timerFn();
 
 void setup() {
   Serial.begin(115200);
@@ -91,7 +89,8 @@ void setup() {
   Serial.println("Websocket function started");
   
   configCamera();
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  timeClient.begin();
+  timeClient.setTimeOffset(28800);
 }
 
 void loop() {
@@ -113,26 +112,15 @@ void loop() {
     String USONIC_ValString = String(hc.dist());
     String IRstatus = "OFF";
     String limitStatus = "OFF";
-
-    String myCurrentTime = myLocalTime();
-    myCheck = checkSchedule();
-
-    if(myCheck == true) 
-    {
-      dispenseRequest = true;
-      //dispense function here, rmb set flag to false after fin.
-      Serial.println("Alarm triggered!");
-    }
+    String myCurrentTime = timerFn();
     
     if(LEDonoff == true) LEDstatus = "ON";
     if(IRonoff == true) IRstatus = "ON";
-    if(limitSchedule == true) limitStatus = "ON";
     
     JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\",";
     JSONtxt += "\"IRonoff\":\""+IRstatus+"\",";
     JSONtxt += "\"myTIME\":\""+myCurrentTime+"\",";
-//    JSONtxt += "\"dispenseStatus\":\""+dispenseRequest+"\",";
-    JSONtxt += "\"limitSch\":\""+limitStatus+"\",";
+    JSONtxt += "\"mySCH\":\""+mySavedSchedule+"\",";
     JSONtxt += "\"DIST\":\""+USONIC_ValString+"\"}";
     
     webSocketFunction.broadcastTXT(JSONtxt);
@@ -195,8 +183,6 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
   String payloadString = (const char *)payload;
   Serial.print("payloadString= ");
   Serial.println(payloadString);
-
-  
   
   if(type == WStype_TEXT) //receive text from client
   {
@@ -217,7 +203,8 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     }
 
     if (var == "schedule")
-    {
+    { 
+      mySavedSchedule == NULL ? mySavedSchedule = val : mySavedSchedule = mySavedSchedule + ',' + val; 
       byte timeSeperator = payloadString.indexOf(':'); 
       String h_str = payloadString.substring(separator+1, timeSeperator);
       String m_str = payloadString.substring(timeSeperator+1);
@@ -229,7 +216,9 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
       int m_val = m_str.toInt();
       Serial.print("m_val= ");
       Serial.println(m_val);
-      
+
+      Serial.print("mySavedSchedule= ");
+      Serial.println(mySavedSchedule);
       saveSchedule(h_val, m_val);
     }
 
@@ -237,6 +226,9 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     {
       //call dlt fn.  
       dltSchedule();
+      mySavedSchedule = "";
+      Serial.print("mySavedSchedule is:");
+      Serial.println(mySavedSchedule);
     }
   }
 }
@@ -295,32 +287,6 @@ void sendHtmlFile(WiFiClient client, const char* filename) {
   }
 }
 
-String myLocalTime(){
-  struct tm timeinfo;
-  String myErrorMsg = "Error obtaining time!";
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return myErrorMsg;
-  }
-
-  String myTime;
-
-  strftime(timeHour,3, "%H", &timeinfo);
-  strftime(timeMinute,3, "%M", &timeinfo);
-  strftime(timeSecond,3, "%S", &timeinfo);
-
-  h_time = String(timeHour);
-  m_time = String(timeMinute);
-  
-  myTime += timeHour;
-  myTime += ':';
-  myTime += timeMinute;
-  myTime += ':';
-  myTime += timeSecond;
-  
-  return myTime;
-  }
-
 void saveSchedule(int h_val, int m_val) {
       if (!(SPIFFS.exists("/schedule.txt"))){
         File fileToWrite = SPIFFS.open("/schedule.txt", FILE_WRITE);
@@ -331,7 +297,6 @@ void saveSchedule(int h_val, int m_val) {
         if(fileToWrite){
           fileToWrite.println(h_val);
           fileToWrite.println(m_val);
-          limitSchedule = true;
           Serial.println("File was written");;
         }else {
           Serial.println("File write failed");
@@ -346,7 +311,6 @@ void saveSchedule(int h_val, int m_val) {
           if(fileToAppend){
               fileToAppend.println(h_val);
               fileToAppend.println(m_val);
-              limitSchedule = true;
               Serial.println("File content was appended");
           } else {
               Serial.println("File append failed");
@@ -360,26 +324,25 @@ void saveSchedule(int h_val, int m_val) {
         return;
       }
      Serial.println("File Content:");
-     while(fileToRead.available()){
-        Serial.write(fileToRead.read());
-      }
       int i = 0;
       char buffer[64];
       
       while (fileToRead.available()){
-        int l = fileToRead.readBytesUntil('\n', buffer, sizeof(buffer));
+        int l = fileToRead.readBytesUntil('\n', buffer, sizeof(buffer)-1);
         buffer[l] = 0;
-    
-        if      (i == 0) h_one = buffer;
-        else if (i == 1) m_one = buffer;
+        
+        arraySch[i] = atoi(buffer);
+        Serial.println(arraySch[i]);
         i++;
       }
+      fileToRead.close();
 }
+
 void dltSchedule()
 {
   if (SPIFFS.remove("/schedule.txt"))
   {
-    limitSchedule = false;
+//    limitSchedule = false;
     Serial.println("File deleted");
     return;
   }else {
@@ -393,17 +356,30 @@ void dltSchedule()
   }
 }
 
-//compare int not string
-bool checkSchedule()
-{   
-  int check_m, check_h;
-  
-  check_m = strcmp(m_time, m_one);
-  if (check_m == 0)
-  {
-    check_h = strcmp(h_time,h_one);
-    if (check_h == 0) return true;
-    else return false;
+String timerFn()
+{
+  while(!timeClient.update()) {
+    timeClient.forceUpdate();
   }
-  return false;
+  currentHour = timeClient.getHours();
+  currentMin = timeClient.getMinutes();
+  currentSec = timeClient.getSeconds();
+
+  String currentHour_str = String(currentHour);
+  currentHour < 10 ? currentHour_str = '0' + currentHour_str : currentHour_str;
+  
+  String currentMin_str  = String(currentMin);
+  currentMin < 10 ? currentMin_str = '0' + currentMin_str : currentMin_str;
+  
+  String currentSec_str  = String(currentSec);
+  currentSec < 10 ? currentSec_str = '0' + currentSec_str : currentSec_str;   
+
+  myCurrentTime = "";
+  myCurrentTime += currentHour_str;
+  myCurrentTime += ":";
+  myCurrentTime += currentMin_str;
+  myCurrentTime += ":";
+  myCurrentTime += currentSec_str;
+  
+  return myCurrentTime;
 }

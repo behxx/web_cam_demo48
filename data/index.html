@@ -107,7 +107,6 @@ fieldset {
     
     <a href="#" id="btn" ONCLICK='button()'> </a>
     <a href="#" id="IR" > </a>
-    <a href="#" id="shclimit" > </a>
 
     <div class="Distance">
       <h2>Distance:</h2>
@@ -161,7 +160,10 @@ fieldset {
       />
       <button ONCLICK="setSchedule()" class="">Set Schedule</button>
     </div>
-
+    <div>
+      <h2>Schedule:</h2>
+      <span id="mySCH"></span>
+    </div>
     <button ONCLICK="deleteSchedule()">Delete Schedule</button>
   </fieldset>
 </body>
@@ -201,17 +203,7 @@ fieldset {
         }
 
         document.getElementById('time_span').innerHTML = JSONobj.myTIME;
-        document.getElementById('shclimit').innerHTML = JSONobj.limitSch;
-        if(JSONobj.limitSch == true)
-        {
-          document.getElementById('shclimit').style.background='#FF0000';
-          document.getElementById('shclimit').style["boxShadow"] = "0px 0px 0px 8px #FF0000";
-        }
-        else
-        {
-          document.getElementById('shclimit').style.background='#111111';
-          document.getElementById('shclimit').style["boxShadow"] = "0px 0px 0px 8px #111111";
-        }
+        document.getElementById('mySCH').innerHTML = JSONobj.mySCH;
         
      }
    }
