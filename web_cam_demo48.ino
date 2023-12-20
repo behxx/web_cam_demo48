@@ -6,6 +6,9 @@
 #include "time.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include "myServoFn.h"
+#include <Servo.h>
+
 
 #include "camera_pins.h"
 
@@ -22,20 +25,25 @@ NTPClient timeClient(ntpUDP);
 
 #define LED 33
 #define IR 14
+#define servoPin 12
 HCSR04 hc(15, 13); //initialisation class HCSR04 (trig pin , echo pin)
 
 uint8_t cam_num;
 bool connected = false;
 bool LEDonoff = false;
 bool IRonoff = false; 
+
+// bool states for schedule and dispense
 bool myCheck = false;
 bool dispenseRequest = false;
-//bool limitSchedule = false;
-String JSONtxt, myCurrentTime, mySavedSchedule;
+int turns_val = 1;
 
+// current time in int
 int currentHour, currentMin, currentSec;
-String h_one, m_one;
 int arraySch[10];
+
+// String to update page via JSON txt
+String JSONtxt, myCurrentTime, mySavedSchedule;
 
 // function declarations
 void configCamera();
@@ -56,6 +64,10 @@ void setup() {
   //setup pinMODE
   pinMode(LED, OUTPUT);
   pinMode(IR, INPUT);
+  
+  Servo servo1;
+  servo1.attach(servoPin);
+  servo1.write(0);
 
   // check SPIFFS mount
   if(!SPIFFS.begin(true)){
@@ -105,8 +117,11 @@ void loop() {
       if(LEDonoff == false) digitalWrite(LED, HIGH);
       else digitalWrite(LED, LOW);
     
-      if(digitalRead(IR) == HIGH) IRonoff = true;
-      else IRonoff = false;
+      if(digitalRead(IR) == LOW) 
+      {
+        IRonoff = true;
+        dispenseFn(turns_val);
+      } else IRonoff = false;
   //-----------------------------------------------
     String LEDstatus = "OFF";
     String USONIC_ValString = String(hc.dist());
@@ -200,6 +215,13 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     {
       LEDonoff = false;
       if (val == "ON") LEDonoff = true;
+    }
+
+    if (var == "setTurns")
+    {
+      turns_val = val.toInt();
+      Serial.print("turns is set to: ");
+      Serial.println(turns_val);
     }
 
     if (var == "schedule")
@@ -365,6 +387,8 @@ String timerFn()
   currentMin = timeClient.getMinutes();
   currentSec = timeClient.getSeconds();
 
+  checkMinFn();
+
   String currentHour_str = String(currentHour);
   currentHour < 10 ? currentHour_str = '0' + currentHour_str : currentHour_str;
   
@@ -382,4 +406,25 @@ String timerFn()
   myCurrentTime += currentSec_str;
   
   return myCurrentTime;
+}
+
+// check done, further verify 
+void checkMinFn()
+{
+  if (!(currentSec == 0)) return;
+  for (int i = 1; i < 11; i += 2)
+  {
+    if (currentMin == arraySch[i])
+    {
+      Serial.print("min is same at: ");
+      Serial.println(arraySch[i]);
+      if (currentHour == arraySch[i-1])
+      {
+        Serial.print("Hour is same at: ");
+        Serial.println(arraySch[i-1]);
+        dispenseFn(turns_val);
+      }
+    }
+  }
+  return;
 }

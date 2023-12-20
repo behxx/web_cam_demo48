@@ -121,15 +121,15 @@ fieldset {
     <div class="setPortion">
       <h2><label for="turns">Set Portion</label></h2>
       <div class="wrapper-class">
-        <input type="radio" id="oneTurn" name="turns" value="one" checked>
+        <input type="radio" id="oneTurn" name="turns" value="1" checked>
         <label for="oneTurn">One Turn</label>
       </div>
       <div class="wrapper-class">
-        <input type="radio" id="twoTurn" name="turns" value="two">
+        <input type="radio" id="twoTurn" name="turns" value="2">
         <label for="twoTurn">Two Turns</label>
       </div>
       <div class="wrapper-class">
-        <input type="radio" id="threeTurn" name="turns" value="three">
+        <input type="radio" id="threeTurn" name="turns" value="3">
         <label for="threeTurn">Three Turns</label>
       </div>
       <button ONCLICK='setTurns()'>Set Portion</button>
@@ -226,12 +226,12 @@ fieldset {
     for (i = 0; i < rbs.length; i++) {
       if (rbs[i].checked) {
         val = rbs[i].value;
-        document.getElementById('resultSetTurn').innerHTML = val+" turns";
+        document.getElementById('resultSetTurn').innerHTML = val + " turns";
         break;
       }
     }
-    turns = 'turns='+val;
-    websock.send(turns);
+    msg = 'setTurns='+val;
+    websock.send(msg);
    }
 
   jQuery(function($){
@@ -300,19 +300,5 @@ fieldset {
     }
   }
 
-  // function updateTime()
-  // {
-  //   var currentTime = new Date()
-  //   var hours = currentTime.getHours()
-  //   var minutes = currentTime.getMinutes()
-    
-    // hours = hours < 10 ? hours = "0" + hours : hours;
-    // minutes = minutes < 10 ? minutes = "0" + minutes : minutes;
-
-  //   var t_str = hours + ":" + minutes ;
-  //   document.getElementById('time_span').innerHTML = t_str;
-  // }
-
-  // setInterval(updateTime, 1000);
 </script>
 </html>
