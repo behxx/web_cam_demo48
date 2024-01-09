@@ -1,10 +1,10 @@
 #include <Servo.h>
 
 static const int servoPin = 12;
-static int degreePos = 0;
+static int degreePos;
 
 
-void dispenseFn(int turns)
+int dispenseFn(int turns, int lastTurn)
 {
     Servo servo1;
     servo1.attach(servoPin);
@@ -13,21 +13,25 @@ void dispenseFn(int turns)
     { 
       if (!(i%2))
       { 
-        servo1.read() == 0 ? degreePos = 90 : degreePos = 0;
+        lastTurn == 60 ? degreePos = 150 : degreePos = 60;
         servo1.write(degreePos);
         Serial.println("servo rotate");
         Serial.println(degreePos);
         Serial.println("delay 1.5s");
+        lastTurn = degreePos;
         delay(1500);
       }
       else 
       {
-        servo1.read() == 0 ? degreePos = 90 : degreePos = 0;
+        lastTurn == 60 ? degreePos = 150 : degreePos = 60;
         servo1.write(degreePos);
         Serial.println("servo rotate");
         Serial.println(degreePos);
         Serial.println("delay 1.5s");
+        lastTurn = degreePos;
         delay(1500);
       }
     }
+    Serial.println("Done dispense");
+    return lastTurn;
 }

@@ -23,27 +23,35 @@ WiFiServer server(80);
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
-#define LED 33
+//#define LED_onboard 33
+#define LED 13
 #define IR 14
 #define servoPin 12
-HCSR04 hc(15, 13); //initialisation class HCSR04 (trig pin , echo pin)
+#define PB 2
+// HCSR04 hc(15, 13); //initialisation class HCSR04 (trig pin , echo pin)
+
+boolean ledState = true;
+int interval_500 = 500;
+int interval_200 = 200;
+long previousMillis = 0;
+long currentMillis;
+long previousMillisLoop = 0;
+long currentMillisLoop;
 
 uint8_t cam_num;
 bool connected = false;
-bool LEDonoff = false;
 bool IRonoff = false; 
 
-// bool states for schedule and dispense
-bool myCheck = false;
-bool dispenseRequest = false;
 int turns_val = 1;
+static int lastTurn;
 
 // current time in int
 int currentHour, currentMin, currentSec;
 int arraySch[10];
 
 // String to update page via JSON txt
-String JSONtxt, myCurrentTime, mySavedSchedule;
+String JSONtxt, myCurrentTime;
+String mySavedSchedule = "Delete schedule to refresh!";
 
 // function declarations
 void configCamera();
@@ -61,13 +69,14 @@ String timerFn();
 void setup() {
   Serial.begin(115200);
   
-  //setup pinMODE
   pinMode(LED, OUTPUT);
   pinMode(IR, INPUT);
+  pinMode(PB, INPUT);
   
   Servo servo1;
   servo1.attach(servoPin);
-  servo1.write(0);
+  servo1.write(60);
+  lastTurn = 60;
 
   // check SPIFFS mount
   if(!SPIFFS.begin(true)){
@@ -77,11 +86,19 @@ void setup() {
 
   //WiFi initiate
   WiFi.begin(ssid, password);
+  
   Serial.println("");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    currentMillis = millis();
+    if (currentMillis - previousMillis > interval_500) 
+    {
+      previousMillis = currentMillis;
+      ledState = !ledState; 
+      digitalWrite(LED, ledState);  
+      Serial.print(".");
+    }
   }
+
   Serial.println("");
   String IP = WiFi.localIP().toString();
   Serial.println("IP address: " + IP);
@@ -103,6 +120,9 @@ void setup() {
   configCamera();
   timeClient.begin();
   timeClient.setTimeOffset(28800);
+  //GMT +08 * 60 * 60
+  
+  digitalWrite(LED, LOW);
 }
 
 void loop() {
@@ -113,32 +133,43 @@ void loop() {
     liveCam(cam_num);
   }
   webSocketFunction.loop();
-    if(connected == true){
-      if(LEDonoff == false) digitalWrite(LED, HIGH);
-      else digitalWrite(LED, LOW);
-    
-      if(digitalRead(IR) == LOW) 
-      {
-        IRonoff = true;
-        dispenseFn(turns_val);
-      } else IRonoff = false;
-  //-----------------------------------------------
-    String LEDstatus = "OFF";
-    String USONIC_ValString = String(hc.dist());
+  if(connected == true){
+    if(digitalRead(PB) == LOW)
+    {
+      lastTurn = dispenseFn(turns_val, lastTurn);
+    }
+  
+    if(digitalRead(IR) == HIGH) 
+    {
+      IRonoff = true;
+    } else IRonoff = false;
+    //-----------------------------------------------
+
+    // String usonicStatus = "";
     String IRstatus = "OFF";
-    String limitStatus = "OFF";
+    
+    // float distance = hc.dist();
     String myCurrentTime = timerFn();
     
-    if(LEDonoff == true) LEDstatus = "ON";
     if(IRonoff == true) IRstatus = "ON";
     
-    JSONtxt = "{\"LEDonoff\":\""+LEDstatus+"\",";
+    // distance > 40.0 ? usonicStatus = "ON" : usonicStatus = "OFF";
+
+    JSONtxt = "{\"myTIME\":\""+myCurrentTime+"\",";
+//    JSONtxt = "{\"IRonoff\":\""+IRstatus+"\",";
     JSONtxt += "\"IRonoff\":\""+IRstatus+"\",";
-    JSONtxt += "\"myTIME\":\""+myCurrentTime+"\",";
-    JSONtxt += "\"mySCH\":\""+mySavedSchedule+"\",";
-    JSONtxt += "\"DIST\":\""+USONIC_ValString+"\"}";
+    JSONtxt += "\"mySCH\":\""+mySavedSchedule+"\"}";
     
     webSocketFunction.broadcastTXT(JSONtxt);
+
+    //LED blinking
+    currentMillisLoop = millis();
+    if (currentMillisLoop - previousMillisLoop > interval_200) 
+    {
+      previousMillisLoop = currentMillisLoop;
+      ledState = !ledState; 
+      digitalWrite(LED, ledState);
+    }
   }
 }
 
@@ -209,49 +240,47 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
     Serial.print("val= ");
     Serial.println(val);
     Serial.println(" ");
-
     
-    if (var == "LEDonoff")
-    {
-      LEDonoff = false;
-      if (val == "ON") LEDonoff = true;
-    }
+     if (var == "dispense")
+     {
+       lastTurn = dispenseFn(turns_val, lastTurn);
+     }
 
-    if (var == "setTurns")
-    {
-      turns_val = val.toInt();
-      Serial.print("turns is set to: ");
-      Serial.println(turns_val);
-    }
+     if (var == "setTurns")
+     {
+       turns_val = val.toInt();
+       Serial.print("turns is set to: ");
+       Serial.println(turns_val);
+     }
 
-    if (var == "schedule")
-    { 
-      mySavedSchedule == NULL ? mySavedSchedule = val : mySavedSchedule = mySavedSchedule + ',' + val; 
-      byte timeSeperator = payloadString.indexOf(':'); 
-      String h_str = payloadString.substring(separator+1, timeSeperator);
-      String m_str = payloadString.substring(timeSeperator+1);
+     if (var == "schedule")
+     { 
+       mySavedSchedule == NULL ? mySavedSchedule = val : mySavedSchedule = mySavedSchedule + ',' + val; 
+       byte timeSeperator = payloadString.indexOf(':'); 
+       String h_str = payloadString.substring(separator+1, timeSeperator);
+       String m_str = payloadString.substring(timeSeperator+1);
       
-      int h_val = h_str.toInt();
-      Serial.print("h_val= ");
-      Serial.println(h_val);
+       int h_val = h_str.toInt();
+       Serial.print("h_val= ");
+       Serial.println(h_val);
       
-      int m_val = m_str.toInt();
-      Serial.print("m_val= ");
-      Serial.println(m_val);
+       int m_val = m_str.toInt();
+       Serial.print("m_val= ");
+       Serial.println(m_val);
 
-      Serial.print("mySavedSchedule= ");
-      Serial.println(mySavedSchedule);
-      saveSchedule(h_val, m_val);
-    }
+       Serial.print("mySavedSchedule= ");
+       Serial.println(mySavedSchedule);
+       saveSchedule(h_val, m_val);
+     }
 
-    if (var == "del_sch")
-    {
-      //call dlt fn.  
-      dltSchedule();
-      mySavedSchedule = "";
-      Serial.print("mySavedSchedule is:");
-      Serial.println(mySavedSchedule);
-    }
+     if (var == "del_sch")
+     {
+       //call dlt fn.  
+       dltSchedule();
+       mySavedSchedule = "";
+       Serial.print("mySavedSchedule is:");
+       Serial.println(mySavedSchedule);
+     }
   }
 }
 
@@ -364,17 +393,10 @@ void dltSchedule()
 {
   if (SPIFFS.remove("/schedule.txt"))
   {
-//    limitSchedule = false;
     Serial.println("File deleted");
     return;
   }else {
     Serial.println("Delete failed");
-  }
-
- File fileToRead = SPIFFS.open("/schedule.txt");
-  if(!fileToRead){
-    Serial.println("Failed to open file for reading");
-    return;
   }
 }
 
@@ -422,7 +444,7 @@ void checkMinFn()
       {
         Serial.print("Hour is same at: ");
         Serial.println(arraySch[i-1]);
-        dispenseFn(turns_val);
+        lastTurn = dispenseFn(turns_val, lastTurn);
       }
     }
   }

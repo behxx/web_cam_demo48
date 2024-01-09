@@ -10,7 +10,7 @@
 <style>
 /* Element selector */
 body {
-    width: 50%;
+    width: 80%;
     height: auto;
     margin: auto;
     background-color: #1b1b32;
@@ -26,20 +26,19 @@ fieldset {
 
 /* ID sellector */
 #live {
-    display: block;
+    display: inline;
     margin: auto;
     width: 30%;
     border: 1px solid white;
     padding: 10px;
 }
 
-#btn, #IR {
+#IR {
     display: inline-block;
     text-decoration: none;
-    background: #8CD460;
+    background: #e98afa;
     color: rgba(255,255,255, 0.80);
     font-weight: bold;
-    font: 60px arial, sans-serif;
     width: 50px;
     height: 50px;
     line-height: 150px;
@@ -47,26 +46,15 @@ fieldset {
     text-align: center;
     vertical-align: middle;
     overflow: hidden;
-    box-shadow: 0px 0px 0px 8px #8CD460;
+    box-shadow: 0px 0px 0px 8px #e98afa;
     border: solid 2px rgba(255,255,255, 0.47);
     transition: 0.5s;
-    margin: 30px;
+    margin: 10px;
 }
 
 #title {
     text-align: center;
 }
-
-#dynRectangle1
-    {
-        width:0px;
-        height:12px;
-        top: 9px;
-        background-color: rgba(255, 0, 0, 0.863);
-        z-index: -1;
-        margin-top: 1px;
-        border: 3px solid black;
-    }
 
 /* Class selector */
 .wrapper-class label {
@@ -82,89 +70,97 @@ fieldset {
 
 .time h2{
     display: inline;
+    text-align: center;
 }
 
-.video {
+/* .video {
   margin-top: 10px;
-}
-.Distance {
-  margin: 20px;
+} */
+ 
+.setBlock{
   display: inline-block;
+  border: 1px solid white
 }
 
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+ 
 </style>
 <!------------------------------H T M L----------------------------->
 <body>
-  <h1 id="title">Capstone project<br>Smart Automatic Pet Feeding System</h1>
+  <div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/UTM-LOGO.png" width="130" height="130" alt="UTM-LOGO" class="center">
+    <h1 id="title">Capstone Project<br>P1G01: Smart Automatic Pet Feeding System</h1>
+  </div>
+  
   <fieldset>
     <div class="time">
       <h2>Current Time:</h2>
       <h2 id="time_span"></h2>
     </div>
+
     <div class="video">
       <img src="" alt="video stream" id="live" class="centre">
     </div>
-    
-    <a href="#" id="btn" ONCLICK='button()'> </a>
+
     <a href="#" id="IR" > </a>
 
-    <div class="Distance">
-      <h2>Distance:</h2>
-      <span  style="color:rgb(216, 3, 3)" id="distValue">0</span> cm <br>
-      <h3>
-        0 cm &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
-        &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 200 cm
-        <div id="dynRectangle1"></div><br>
-      </h3>
-    </div>
-    
-    <div class="setPortion">
-      <h2><label for="turns">Set Portion</label></h2>
-      <div class="wrapper-class">
-        <input type="radio" id="oneTurn" name="turns" value="1" checked>
-        <label for="oneTurn">One Turn</label>
-      </div>
-      <div class="wrapper-class">
-        <input type="radio" id="twoTurn" name="turns" value="2">
-        <label for="twoTurn">Two Turns</label>
-      </div>
-      <div class="wrapper-class">
-        <input type="radio" id="threeTurn" name="turns" value="3">
-        <label for="threeTurn">Three Turns</label>
-      </div>
-      <button ONCLICK='setTurns()'>Set Portion</button>
-    </div>
+    <div class="setBlock">
+      <div class="set-portion">
+        <h2><label for="turns">Set Portion</label></h2>
+        <div class="wrapper-class">
+          <input type="radio" id="oneTurn" name="turns" value="1" checked>
+          <label for="oneTurn">One Turn</label>
+        </div>
+        <div class="wrapper-class">
+          <input type="radio" id="twoTurn" name="turns" value="2">
+          <label for="twoTurn">Two Turns</label>
+        </div>
+        <div class="wrapper-class">
+          <input type="radio" id="threeTurn" name="turns" value="3">
+          <label for="threeTurn">Three Turns</label>
+        </div>
+        
+        <p id="resultSetTurn">Default is 1 turn</p>
   
-    <div id="resultSetTurn"></div>
+        <button ONCLICK='setTurns()'>Set Portion</button>
+        <button ONCLICK="dispense()">Dispense</button>
+      </div>
+  
+      <div class="create-alarm">
+        <div>
+          <h2>Schedule:</h2>
+          <span id="mySCH"></span>
+        </div>
 
-    <div class="create-alarm">
-      <input
-      type="number"
-      name="h"
-      id="h"
-      min="0"
-      max="23"
-      placeholder="H"
-      class="alarm-inputs"
-      required
-      />
-      <input
-      type="number"
-      name="m"
-      id="m"
-      min="0"
-      max="59"
-      placeholder="M"
-      class="alarm-inputs"
-      required
-      />
-      <button ONCLICK="setSchedule()" class="">Set Schedule</button>
+        <input
+        type="number"
+        name="h"
+        id="h"
+        min="0"
+        max="23"
+        placeholder="H"
+        class="alarm-inputs"
+        required
+        />
+        <input
+        type="number"
+        name="m"
+        id="m"
+        min="0"
+        max="59"
+        placeholder="M"
+        class="alarm-inputs"
+        required
+        />
+        <button ONCLICK="setSchedule()">Set Schedule</button>
+        <button ONCLICK="deleteSchedule()">Delete Schedule</button>
+      </div>
     </div>
-    <div>
-      <h2>Schedule:</h2>
-      <span id="mySCH"></span>
-    </div>
-    <button ONCLICK="deleteSchedule()">Delete Schedule</button>
+   
   </fieldset>
 </body>
 <script>
@@ -174,22 +170,21 @@ fieldset {
      websock.onmessage = function(evt)
      {
         JSONobj = JSON.parse(evt.data);
-        document.getElementById('btn').innerHTML = JSONobj.LEDonoff;
-        if(JSONobj.LEDonoff == 'ON')
-        {
-          document.getElementById('btn').style.background='#FF0000';
-          document.getElementById('btn').style["boxShadow"] = "0px 0px 0px 8px #FF0000";
-        }
-        else
-        {
-          document.getElementById('btn').style.background='#111111';
-          document.getElementById('btn').style["boxShadow"] = "0px 0px 0px 8px #111111";
-        }
 
-        document.getElementById('distValue').innerHTML = JSONobj.DIST;
-        var temp = parseInt(JSONobj.DIST);
-        document.getElementById("dynRectangle1").style.width = temp+"px";
+        // //get for Ultrasonic sensor
+        // document.getElementById('US').innerHTML = JSONobj.USonoff;
+        // if(JSONobj.USonoff == 'ON')
+        // {
+        //   document.getElementById('US').style.background='#FF0000';
+        //   document.getElementById('US').style["boxShadow"] = "0px 0px 0px 8px #FF0000";
+        // }
+        // else
+        // {
+        //   document.getElementById('US').style.background='#111111';
+        //   document.getElementById('US').style["boxShadow"] = "0px 0px 0px 8px #111111";
+        // }
 
+        //get for IR sensor
         document.getElementById('IR').innerHTML = JSONobj.IRonoff;
         if(JSONobj.IRonoff == 'ON')
         {
@@ -202,24 +197,14 @@ fieldset {
           document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #111111";
         }
 
+        // get for Time
         document.getElementById('time_span').innerHTML = JSONobj.myTIME;
         document.getElementById('mySCH').innerHTML = JSONobj.mySCH;
-        
      }
    }
    InitWebSocket()
 
    //-------------------------------------------------------------
-   function button()
-   {
-      btn = 'LEDonoff=ON';
-      if(document.getElementById('btn').innerHTML == 'ON')
-      {
-        btn = 'LEDonoff=OFF';
-      }
-      websock.send(btn);
-   }
-
    function setTurns()
    {
     var rbs = document.getElementsByName('turns');
@@ -232,40 +217,7 @@ fieldset {
     }
     msg = 'setTurns='+val;
     websock.send(msg);
-   }
-
-  jQuery(function($){
-      if (!('WebSocket in window')){
-          alert('Your browser does not support web sockets!');
-      }
-      else {
-          setup();
-      }
-      function setup(){
-          var host = 'ws://'+window.location.hostname+':81/';
-          var socket = new WebSocket(host);
-          socket.binaryType = 'arraybuffer';
-          
-          if (socket){
-              socket.onopen = function(){
-
-              }
-              socket.onmessage = function(msg){
-                  var bytes = new Uint8Array(msg.data);
-                  var binary= '';
-                  var len = bytes.byteLength;
-                  for (var i = 0; i < len; i++) {
-                      binary += String.fromCharCode(bytes[i])
-                  }
-                  var img = document.getElementById('live');
-                  img.src = 'data:image/jpg;base64,'+window.btoa(binary);
-              }
-              socket.onclose = function(){
-                  showServerResponse('The connection has been closed.');
-              }
-          }
-      }
-  })
+  }
 
   function setSchedule()
   {       
@@ -300,5 +252,46 @@ fieldset {
     }
   }
 
+  function dispense()
+  { 
+    let text = "Confirm dispense?";
+    if (confirm(text) == true) {
+    msg = 'dispense=true';
+    websock.send(msg);
+    } else alert("Dispense cancelled!");
+  }
+
+  jQuery(function($){
+      if (!('WebSocket in window')){
+          alert('Your browser does not support web sockets!');
+      }
+      else {
+          setup();
+      }
+      function setup(){
+          var host = 'ws://'+window.location.hostname+':81/';
+          var socket = new WebSocket(host);
+          socket.binaryType = 'arraybuffer';
+          
+          if (socket){
+              socket.onopen = function(){
+
+              }
+              socket.onmessage = function(msg){
+                  var bytes = new Uint8Array(msg.data);
+                  var binary= '';
+                  var len = bytes.byteLength;
+                  for (var i = 0; i < len; i++) {
+                      binary += String.fromCharCode(bytes[i])
+                  }
+                  var img = document.getElementById('live');
+                  img.src = 'data:image/jpg;base64,'+window.btoa(binary);
+              }
+              socket.onclose = function(){
+                  showServerResponse('The connection has been closed.');
+              }
+          }
+      }
+  })
 </script>
 </html>

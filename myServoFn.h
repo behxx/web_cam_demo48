@@ -1,1 +1,1 @@
-void dispenseFn(int turns);
+int dispenseFn(int turns, int lastTurn);
