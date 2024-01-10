@@ -32,7 +32,7 @@ NTPClient timeClient(ntpUDP);
 
 boolean ledState = true;
 int interval_500 = 500;
-int interval_200 = 200;
+int interval_50 = 50;
 long previousMillis = 0;
 long currentMillis;
 long previousMillisLoop = 0;
@@ -164,7 +164,7 @@ void loop() {
 
     //LED blinking
     currentMillisLoop = millis();
-    if (currentMillisLoop - previousMillisLoop > interval_200) 
+    if (currentMillisLoop - previousMillisLoop > interval_50) 
     {
       previousMillisLoop = currentMillisLoop;
       ledState = !ledState; 
@@ -198,7 +198,7 @@ void configCamera(){
   config.pixel_format = PIXFORMAT_JPEG;
 
   config.frame_size = FRAMESIZE_QVGA;
-  config.jpeg_quality = 4;
+  config.jpeg_quality = 10;
   config.fb_count = 1;
 
   esp_err_t err = esp_camera_init(&config);

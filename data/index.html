@@ -22,35 +22,13 @@ body {
 
 fieldset {
     background-color: #3b3b4f;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 30px;
 }
 
 /* ID sellector */
-#live {
-    display: inline;
-    margin: auto;
-    width: 30%;
-    border: 1px solid white;
-    padding: 10px;
-}
-
-#IR {
-    display: inline-block;
-    text-decoration: none;
-    background: #e98afa;
-    color: rgba(255,255,255, 0.80);
-    font-weight: bold;
-    width: 50px;
-    height: 50px;
-    line-height: 150px;
-    border-radius: 50%;
-    text-align: center;
-    vertical-align: middle;
-    overflow: hidden;
-    box-shadow: 0px 0px 0px 8px #e98afa;
-    border: solid 2px rgba(255,255,255, 0.47);
-    transition: 0.5s;
-    margin: 10px;
-}
 
 #title {
     text-align: center;
@@ -58,7 +36,7 @@ fieldset {
 
 /* Class selector */
 .wrapper-class label {
-    display: inline;
+    display: inline-block;
     margin-left: 5px;
     text-align: left;
 }
@@ -68,74 +46,97 @@ fieldset {
     display: inline;
 }
 
-.time h2{
-    display: inline;
-    text-align: center;
+.time {
+  padding-bottom: 10px;
+  display: block;
+  text-align: center;
 }
 
-/* .video {
-  margin-top: 10px;
-} */
- 
-.setBlock{
-  display: inline-block;
-  border: 1px solid white
-}
-
-.center {
+.center_block {
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#IR {
+    display: inline-block;
+    text-decoration: none;
+    background: #e98afa;
+    color: rgba(255,255,255, 0.80);
+    font-weight: bold;
+    width: 60px;
+    height: 60px;
+    line-height: 150px;
+    border-radius: 30%;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    box-shadow: 0px 0px 0px 8px #e98afa;
+    border: solid 2px rgba(255,255,255, 0.47);
+    transition: 0.5s;
+}
+
+#live {
+    width: 40%;
+    border: 1px solid white;
+    padding: 10px;
+}
+ 
+.setBlock {
+  /* display: inline-block; */
+  border: 1px solid white;
+  padding: 10px;
+  /* vertical-align: middle; */
 }
  
 </style>
 <!------------------------------H T M L----------------------------->
 <body>
   <div>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/UTM-LOGO.png" width="130" height="130" alt="UTM-LOGO" class="center">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/UTM-LOGO.png" width="130" height="130" alt="UTM-LOGO" class="center_block">
     <h1 id="title">Capstone Project<br>P1G01: Smart Automatic Pet Feeding System</h1>
   </div>
   
+  <div class="time">
+    <h2 id="time_span"></h2>
+  </div>
+
   <fieldset>
-    <div class="time">
-      <h2>Current Time:</h2>
-      <h2 id="time_span"></h2>
-    </div>
+    <p href="#" id="IR" >FOOD</p>
 
-    <div class="video">
-      <img src="" alt="video stream" id="live" class="centre">
-    </div>
-
-    <a href="#" id="IR" > </a>
+    <img src="" alt="video stream" id="live">
 
     <div class="setBlock">
-      <div class="set-portion">
-        <h2><label for="turns">Set Portion</label></h2>
-        <div class="wrapper-class">
-          <input type="radio" id="oneTurn" name="turns" value="1" checked>
-          <label for="oneTurn">One Turn</label>
-        </div>
-        <div class="wrapper-class">
-          <input type="radio" id="twoTurn" name="turns" value="2">
-          <label for="twoTurn">Two Turns</label>
-        </div>
-        <div class="wrapper-class">
-          <input type="radio" id="threeTurn" name="turns" value="3">
-          <label for="threeTurn">Three Turns</label>
-        </div>
-        
-        <p id="resultSetTurn">Default is 1 turn</p>
-  
-        <button ONCLICK='setTurns()'>Set Portion</button>
-        <button ONCLICK="dispense()">Dispense</button>
+      <h2><label for="turns">Set Portion</label></h2>
+      <div class="wrapper-class">
+        <input type="radio" id="oneTurn" name="turns" value="1" checked>
+        <label for="oneTurn">One Turn</label>
       </div>
-  
+      <div class="wrapper-class">
+        <input type="radio" id="twoTurn" name="turns" value="2">
+        <label for="twoTurn">Two Turns</label>
+      </div>
+      <div class="wrapper-class">
+        <input type="radio" id="threeTurn" name="turns" value="3">
+        <label for="threeTurn">Three Turns</label>
+      </div>
+      
+      <p id="resultSetTurn">Default is 1 turn</p>
+
+      <button ONCLICK='setTurns()'>Set Portion</button>
+      <button ONCLICK="dispense()">Dispense</button>
+      
       <div class="create-alarm">
         <div>
           <h2>Schedule:</h2>
           <span id="mySCH"></span>
         </div>
-
+  
         <input
         type="number"
         name="h"
@@ -156,12 +157,13 @@ fieldset {
         class="alarm-inputs"
         required
         />
-        <button ONCLICK="setSchedule()">Set Schedule</button>
-        <button ONCLICK="deleteSchedule()">Delete Schedule</button>
+        <button ONCLICK="setSchedule()" style="display: inline-block;">Set Schedule</button>
+        <button ONCLICK="deleteSchedule()" style="display: inline-block;">Delete Schedule</button>
       </div>
     </div>
-   
+
   </fieldset>
+
 </body>
 <script>
     function InitWebSocket()
@@ -193,8 +195,8 @@ fieldset {
         }
         else
         {
-          document.getElementById('IR').style.background='#111111';
-          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #111111";
+          document.getElementById('IR').style.background='#00FF00';
+          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #00FF00";
         }
 
         // get for Time
