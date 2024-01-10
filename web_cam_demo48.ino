@@ -122,7 +122,7 @@ void setup() {
   timeClient.setTimeOffset(28800);
   //GMT +08 * 60 * 60
   
-  digitalWrite(LED, LOW);
+  digitalWrite(LED, HIGH); 
 }
 
 void loop() {

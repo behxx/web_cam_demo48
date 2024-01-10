@@ -22,10 +22,6 @@ body {
 
 fieldset {
     background-color: #3b3b4f;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    padding: 30px;
 }
 
 /* ID sellector */
@@ -82,18 +78,32 @@ fieldset {
 }
 
 #live {
-    width: 40%;
+    width: 60%;
     border: 1px solid white;
     padding: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.myGrid {
+  display: grid;
+  grid-template-columns: 20% auto 20%;
+  padding: 10px;
+  align-items: stretch;
+  justify-items: center ;
+}
+
+.Food {
+  border: 1px solid white;
+  padding: 20px;
 }
  
-.setBlock {
-  /* display: inline-block; */
+.alarmBlock {
   border: 1px solid white;
   padding: 10px;
-  /* vertical-align: middle; */
+  margin: 10px;
 }
- 
+
 </style>
 <!------------------------------H T M L----------------------------->
 <body>
@@ -101,67 +111,68 @@ fieldset {
     <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/UTM-LOGO.png" width="130" height="130" alt="UTM-LOGO" class="center_block">
     <h1 id="title">Capstone Project<br>P1G01: Smart Automatic Pet Feeding System</h1>
   </div>
-  
-  <div class="time">
-    <h2 id="time_span"></h2>
-  </div>
 
   <fieldset>
-    <p href="#" id="IR" >FOOD</p>
-
-    <img src="" alt="video stream" id="live">
-
-    <div class="setBlock">
-      <h2><label for="turns">Set Portion</label></h2>
-      <div class="wrapper-class">
-        <input type="radio" id="oneTurn" name="turns" value="1" checked>
-        <label for="oneTurn">One Turn</label>
-      </div>
-      <div class="wrapper-class">
-        <input type="radio" id="twoTurn" name="turns" value="2">
-        <label for="twoTurn">Two Turns</label>
-      </div>
-      <div class="wrapper-class">
-        <input type="radio" id="threeTurn" name="turns" value="3">
-        <label for="threeTurn">Three Turns</label>
-      </div>
-      
-      <p id="resultSetTurn">Default is 1 turn</p>
-
-      <button ONCLICK='setTurns()'>Set Portion</button>
-      <button ONCLICK="dispense()">Dispense</button>
-      
-      <div class="create-alarm">
-        <div>
-          <h2>Schedule:</h2>
-          <span id="mySCH"></span>
+    <div class="time">
+      <h2 id="time_span"></h2>
+    </div>
+    <div class="myGrid">
+      <div class="Food">
+        <p href="#" id="IR" >FOOD</p>
+        <h2><label for="turns">Set Portion</label></h2>
+        <div class="wrapper-class">
+          <input type="radio" id="oneTurn" name="turns" value="1" checked>
+          <label for="oneTurn">One Turn</label>
         </div>
+        <div class="wrapper-class">
+          <input type="radio" id="twoTurn" name="turns" value="2">
+          <label for="twoTurn">Two Turns</label>
+        </div>
+        <div class="wrapper-class">
+          <input type="radio" id="threeTurn" name="turns" value="3">
+          <label for="threeTurn">Three Turns</label>
+        </div>
+        
+        <p id="resultSetTurn">Default is 1 turn</p>
   
-        <input
-        type="number"
-        name="h"
-        id="h"
-        min="0"
-        max="23"
-        placeholder="H"
-        class="alarm-inputs"
-        required
-        />
-        <input
-        type="number"
-        name="m"
-        id="m"
-        min="0"
-        max="59"
-        placeholder="M"
-        class="alarm-inputs"
-        required
-        />
-        <button ONCLICK="setSchedule()" style="display: inline-block;">Set Schedule</button>
-        <button ONCLICK="deleteSchedule()" style="display: inline-block;">Delete Schedule</button>
+        <button ONCLICK='setTurns()'>Set Portion</button>
+        <button ONCLICK="dispense()">Dispense</button>
+      </div>
+
+      <img src="" alt="video stream" id="live">
+  
+      <div class="alarmBlock">
+        <div class="create-alarm">
+          <div>
+            <h2>Schedule</h2>
+            <span id="mySCH"></span>
+          </div>
+    
+          <input
+          type="number"
+          name="h"
+          id="h"
+          min="0"
+          max="23"
+          placeholder="H"
+          class="alarm-inputs"
+          required
+          />
+          <input
+          type="number"
+          name="m"
+          id="m"
+          min="0"
+          max="59"
+          placeholder="M"
+          class="alarm-inputs"
+          required
+          />
+          <button ONCLICK="setSchedule()" style="display: block; margin-top: 10px; margin-bottom: 10px;">Set Schedule</button>
+          <button ONCLICK="deleteSchedule()" style="display: block; ">Delete Schedule</button>
+        </div>
       </div>
     </div>
-
   </fieldset>
 
 </body>
