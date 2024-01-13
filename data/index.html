@@ -62,7 +62,7 @@ fieldset {
 #IR {
     display: inline-block;
     text-decoration: none;
-    background: #e98afa;
+    background: #2dd752;
     color: rgba(255,255,255, 0.80);
     font-weight: bold;
     width: 60px;
@@ -72,7 +72,7 @@ fieldset {
     text-align: center;
     vertical-align: middle;
     overflow: hidden;
-    box-shadow: 0px 0px 0px 8px #e98afa;
+    box-shadow: 0px 0px 0px 8px #2dd752;
     border: solid 2px rgba(255,255,255, 0.47);
     transition: 0.5s;
 }
@@ -119,7 +119,7 @@ fieldset {
     <div class="myGrid">
       <div class="Food">
         <p href="#" id="IR" >FOOD</p>
-        <h2><label for="turns">Set Portion</label></h2>
+        <h3><label for="turns">Set Portion</label></h3>
         <div class="wrapper-class">
           <input type="radio" id="oneTurn" name="turns" value="1" checked>
           <label for="oneTurn">One Turn</label>
@@ -137,6 +137,11 @@ fieldset {
   
         <button ONCLICK='setTurns()'>Set Portion</button>
         <button ONCLICK="dispense()">Dispense</button>
+
+        <h3>Chat ID</h3>
+        <input type="text" id="chatID" placeholder="default (986451973)">
+        <button ONCLICK ="setChatID()">Set Chat ID</button>
+
       </div>
 
       <img src="" alt="video stream" id="live">
@@ -201,13 +206,14 @@ fieldset {
         document.getElementById('IR').innerHTML = JSONobj.IRonoff;
         if(JSONobj.IRonoff == 'ON')
         {
-          document.getElementById('IR').style.background='#FF0000';
-          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #FF0000";
+          document.getElementById('IR').style.background='#e12e2e';
+          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #e12e2e";
+          // alert("Food is running low!");
         }
         else
         {
-          document.getElementById('IR').style.background='#00FF00';
-          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #00FF00";
+          document.getElementById('IR').style.background='#2dd752';
+          document.getElementById('IR').style["boxShadow"] = "0px 0px 0px 8px #2dd752";
         }
 
         // get for Time
@@ -230,6 +236,19 @@ fieldset {
     }
     msg = 'setTurns='+val;
     websock.send(msg);
+  }
+
+  function setChatID()
+  { 
+    var chatID = document.getElementById("chatID").value;
+    let text = "Confirm to set Chat ID @ " + chatID + "?";
+    if (confirm(text) == true) {
+      alert("Chat ID set to @ " + chatID);
+      var msg = 'chatID='+chatID;
+      websock.send(msg);
+    } else {
+      alert("Chat ID not set!");
+    }
   }
 
   function setSchedule()

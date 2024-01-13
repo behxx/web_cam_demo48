@@ -9,12 +9,15 @@
 #include "myServoFn.h"
 #include <Servo.h>
 
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#include <ArduinoJson.h>
 
 #include "camera_pins.h"
 
 // variable definations
-const char* ssid = "MI 6";
-const char* password = "beh01234";
+const char* ssid = "P1G01";
+const char* password = "pet@p1g01";
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 WebSocketsServer webSocketFunction = WebSocketsServer(82);
@@ -23,6 +26,11 @@ WiFiServer server(80);
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
+#define BOTtoken "6920454260:AAERypPhvrQhTSKVMDyGe5XZXRmf5LejN40"
+//#define CHAT_ID 
+WiFiClientSecure botClient;
+UniversalTelegramBot bot(BOTtoken, botClient);
+
 //#define LED_onboard 33
 #define LED 13
 #define IR 14
@@ -30,6 +38,7 @@ NTPClient timeClient(ntpUDP);
 #define PB 2
 // HCSR04 hc(15, 13); //initialisation class HCSR04 (trig pin , echo pin)
 
+int botMsgCount = 0;
 boolean ledState = true;
 int interval_500 = 500;
 int interval_50 = 50;
@@ -44,6 +53,9 @@ bool IRonoff = false;
 
 int turns_val = 1;
 static int lastTurn;
+
+//bot String
+String CHAT_ID = "986451973";
 
 // current time in int
 int currentHour, currentMin, currentSec;
@@ -86,6 +98,7 @@ void setup() {
 
   //WiFi initiate
   WiFi.begin(ssid, password);
+  botClient.setCACert(TELEGRAM_CERTIFICATE_ROOT);
   
   Serial.println("");
   while (WiFi.status() != WL_CONNECTED) {
@@ -123,6 +136,8 @@ void setup() {
   //GMT +08 * 60 * 60
   
   digitalWrite(LED, HIGH); 
+//  bot.sendMessage(CHAT_ID, "Bot started up", "");
+  Serial.println("Bot started!");
 }
 
 void loop() {
@@ -134,6 +149,8 @@ void loop() {
   }
   webSocketFunction.loop();
   if(connected == true){
+    
+    String myCurrentTime = timerFn();
     if(digitalRead(PB) == LOW)
     {
       lastTurn = dispenseFn(turns_val, lastTurn);
@@ -142,6 +159,12 @@ void loop() {
     if(digitalRead(IR) == HIGH) 
     {
       IRonoff = true;
+      if (botMsgCount < 3)
+      { 
+        String msg = "Pet food is running low!!";
+        bot.sendMessage(CHAT_ID, msg, "");
+        botMsgCount++;
+      }
     } else IRonoff = false;
     //-----------------------------------------------
 
@@ -149,7 +172,6 @@ void loop() {
     String IRstatus = "OFF";
     
     // float distance = hc.dist();
-    String myCurrentTime = timerFn();
     
     if(IRonoff == true) IRstatus = "ON";
     
@@ -280,6 +302,13 @@ void webSocketEventFunction(uint8_t num, WStype_t type, uint8_t *payload, size_t
        mySavedSchedule = "";
        Serial.print("mySavedSchedule is:");
        Serial.println(mySavedSchedule);
+     }
+
+     if (var == "chatID")
+     {
+        CHAT_ID = val;
+        Serial.println("CHAT_ID is now");
+        Serial.println(val);
      }
   }
 }
